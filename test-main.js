@@ -25,9 +25,13 @@ require.config({
     'scribe': '../../bower_components/scribe/scribe',
     // endscribe
     'brthur': './brthur',
+    'brthur-core': './brthur-core',
     'brthur-chunk': './brthur-chunk',
+    'brthur-chunklist': './brthur-chunklist',
+    'brthur-view': './brthur-view',
     'element-chunk': './chunks/element-chunk',
     'static-chunk': './chunks/static-chunk',
+    'content-editable-chunk': './chunks/content-editable-chunk',
 
     // tests
     'jasmine-jquery': '../../bower_components/jasmine-jquery/lib/jasmine-jquery'

@@ -5,7 +5,7 @@
 The aim of this project is to waste a bunch of time writing a componentized
 web editor.
 
-Namesake:
+## Namesake
 ![Bea Arthur](http://i.imgur.com/kprOERr.jpg)
 
 ## Getting started

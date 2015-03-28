@@ -5,6 +5,6 @@
   } else if (typeof exports === 'object') {
     module.exports = factory();
   } else {
-    global.BRthur = factory();
+    global.brthur = factory();
   }
 }(this, function () {

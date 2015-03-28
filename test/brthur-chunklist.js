@@ -3,18 +3,16 @@
 define([
   'scribe',
   'jquery',
-  'brthur-core',
+  'brthur-chunklist',
   'static-chunk',
-  'jasmine-jquery'], function(Scribe, jquery, BRthur, StaticChunk, jasmineJquery) {
+  'jasmine-jquery'], function(Scribe, jquery, ChunkList, StaticChunk, jasmineJquery) {
 
-  describe('brthur', function () {
+  describe('ChunkList', function () {
 
-    var brthur;   
+    var chunkList;   
 
     beforeEach(function () {
-      jasmine.getFixtures().fixturesPath = '/base/test/fixtures';
-      loadFixtures('brthur.html');
-      brthur = new BRthur(document.getElementById('brthur'), {});
+      chunkList = new ChunkList({});
     });
 
     it('loads up a-ok', function () {
@@ -32,16 +30,16 @@ define([
         var chunk = new StaticChunk({
           content: content
         });
-        brthur.appendChunk(chunk);
+        chunkList.appendChunk(chunk);
         expectedHtml += contentHtml;
       }
-      expect(brthur.getHtml()).toEqual(expectedHtml);
+      expect(chunkList.getHtml()).toEqual(expectedHtml);
       var moreChunk = new StaticChunk({
         content: moreContent
       }); 
-      brthur.insertChunk(moreChunk, 0);
-      expect(brthur.getHtml()).toEqual(moreContentHtml + expectedHtml);
-      expect(brthur.chunkIndex(moreChunk)).toEqual(0);
+      chunkList.insertChunk(moreChunk, 0);
+      expect(chunkList.getHtml()).toEqual(moreContentHtml + expectedHtml);
+      expect(chunkList.chunkIndex(moreChunk)).toEqual(0);
     });
   
     it('handles appending/removal of some StaticChunks', function () {
@@ -53,31 +51,31 @@ define([
       // append em
       for (var i = 0; i < numChunks; i++) {
         // ensure events are fired
-        var onHtmlChanged = jasmine.createSpy('htmlChanged' + i);
-        brthur.events.addListener('htmlChanged', onHtmlChanged);
+        var onChunkInserted= jasmine.createSpy('chunkInserted' + i);
+        chunkList.events.addListener('chunkInserted', onChunkInserted);
         // create a chunk and add it
         var chunk = new StaticChunk({
           content: content
         });
         chunks.push(chunk);
-        brthur.appendChunk(chunk);
+        chunkList.appendChunk(chunk);
 
         expectedHtml += contentHtml;
-        expect(brthur.getHtml()).toEqual(expectedHtml);
-        expect(onHtmlChanged).toHaveBeenCalled();
+        expect(chunkList.getHtml()).toEqual(expectedHtml);
+        expect(onChunkInserted).toHaveBeenCalled();
       }
       // remove em
       for (var i = numChunks - 1; i >= 0; i--) {
         // ensure events are fired
-        var onHtmlChanged = jasmine.createSpy('htmlChanged' + i);
-        brthur.events.addListener('htmlChanged', onHtmlChanged);
+        var onChunkRemoved = jasmine.createSpy('chunkRemoved' + i);
+        chunkList.events.addListener('chunkRemoved', onChunkRemoved);
         // create a chunk and add it
         chunk = chunks.pop();
-        brthur.removeChunk(chunk);
+        chunkList.removeChunk(chunk);
 
         expectedHtml = expectedHtml.substr(0, expectedHtml.length - contentHtml.length);
-        expect(brthur.getHtml()).toEqual(expectedHtml);
-        expect(onHtmlChanged).toHaveBeenCalled();
+        expect(chunkList.getHtml()).toEqual(expectedHtml);
+        expect(onChunkRemoved).toHaveBeenCalled();
       }
     });
   });

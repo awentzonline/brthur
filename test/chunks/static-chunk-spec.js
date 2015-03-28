@@ -2,14 +2,14 @@
 
 define([
   'static-chunk',
-  'jasmine-jquery'], function(HelloChunk, jasmineJquery) {
+  'jasmine-jquery'], function(StaticChunk, jasmineJquery) {
 
   describe('StaticChunk', function () {
     var chunk;  
     var content = 'Hey buddy!'; 
 
     beforeEach(function () {
-      chunk = new HelloChunk({
+      chunk = new StaticChunk({
         content: content
       });
     });
@@ -19,7 +19,7 @@ define([
     });
 
     it('politely greets', function () {
-      expect(chunk.getHTML()).toEqual('<div>' + content + '</div>');
+      expect(chunk.getHtml()).toEqual('<div>' + content + '</div>');
     });
 
   });

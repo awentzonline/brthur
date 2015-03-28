@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "homepage": "https://github.com/awentzonline/brthur",
   "authors": [
-    "Adam Wentz <awentz@theonion.com>"
+    "Adam Wentz <adam@adamwentz.com>"
   ],
   "description": "A huge time-sink.",
   "main": "build/brthur.js",

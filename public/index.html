@@ -30,20 +30,25 @@
   <script src="../build/brthur.js"></script>
   <script>
   $(function () {
-    var brthur = new BRthur(document.getElementById('brthur-demo'), {});
-    var output = $('#html-output'); 
-    brthur.events.addListener('htmlChanged', function (brthur) {
-      output.html(brthur.getHTML());
+    var brth = new brthur.BRthur(document.getElementById('brthur-demo'), {});
+    // check out the HTML
+    var output = $('#html-output');
+    brth.events.addListener('htmlChanged', function (brthur) {
+      output.text(brth.getHtml());
     });
-    brthur.events.addListener('chunkAdded', function (brthur) {
+    // other event examples
+    brth.chunkList.events.addListener('chunkAdded', function (brthur) {
       console.log('added a chunk');
     });
-    brthur.events.addListener('chunkChanged', function (brthur) {
+    brth.chunkList.events.addListener('chunkChanged', function (brthur) {
       console.log('changed a chunk');
     });
-    brthur.events.addListener('chunkRemoved', function (brthur) {
+    brth.chunkList.events.addListener('chunkRemoved', function (brthur) {
       console.log('removed a chunk');
     });
+    // lets make some initial chunks?
+    var editableChunk = new brthur.ContentEditableChunk({initialHtml: 'Yo!'});
+    brth.appendChunk(editableChunk);
   });
   </script>
 </body>

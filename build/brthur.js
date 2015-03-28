@@ -5,7 +5,7 @@
   } else if (typeof exports === 'object') {
     module.exports = factory();
   } else {
-    global.BRthur = factory();
+    global.brthur = factory();
   }
 }(this, function () {/**
  * @license almond 0.2.9 Copyright (c) 2011-2014, The Dojo Foundation All Rights Reserved.
@@ -11217,7 +11217,7 @@ define("jquery", function(){});
 
 
 
-define('brthur',[
+define('brthur-chunklist',[
   'jquery',
   'EventEmitter'
 ], function (
@@ -11225,45 +11225,288 @@ define('brthur',[
 ) {
 
 var defaults = {
-  multiline: true,
+  multiline: true
 };
 
-function BRthur(element, options) {
-  this.element = element;
+function ChunkList(options) {
   this.options = $.extend(defaults, options || {});
   this.chunks = [];
+  this.observers = [];
   this.events = new EventEmitter();
-  this.events.defineEvents(['chunkAdded', 'chunkChanged', 'chunkRemoved']);
-  this.events.addListener('chunkAdded', function (brthur) {
-    brthur.events.emitEvent('htmlChanged', [brthur]);
-  });
+  this.events.defineEvents(['chunkInserted', 'chunkChanged', 'chunkRemoved']);
 }
 
-BRthur.prototype.getHTML = function () {
+ChunkList.prototype.getHtml = function () {
   var html = '';
   for (var i = 0; i < this.chunks.length; i++) {
     var chunk = this.chunks[i];
-    html += chunk.getHTML();
+    html += chunk.getHtml();
   }
   return html;
 };
 
-BRthur.prototype.appendChunk = function (chunk) {
-  this.chunks.push(chunk);
-  chunk.added(this);
-  this.events.emitEvent('chunkAdded', [this, chunk]);
+ChunkList.prototype.appendChunk = function (chunk) {
+  this.insertChunk(chunk, this.chunks.length);
 };
 
-BRthur.prototype.removeChunk = function (chunk) {
-  var index = this.chunks.indexOf(chunk);
-  if (index !== -1) {
-    this.chunks.splice(index, 1);
-    chunk.removed();
-    this.events.emitEvent('chunkRemoved', [this, chunk]);
+ChunkList.prototype.insertChunk = function (chunk, index) {
+  if (this.chunkIndex(chunk) === -1) {
+    index = Math.max(0, Math.min(index, this.chunks.length));
+    this.chunks.splice(index, 0, chunk);
+    chunk.added(this);
+    this.events.emitEvent('chunkInserted', [chunk, index]);
   }
 };
 
+ChunkList.prototype.removeChunk = function (chunk) {
+  var index = this.chunkIndex(chunk) 
+  if (index !== -1) {
+    this.chunks.splice(index, 1);
+    chunk.removed();
+    this.events.emitEvent('chunkRemoved', [chunk]);
+  }
+};
+
+ChunkList.prototype.chunkIndex = function (chunk) {
+  return this.chunks.indexOf(chunk);
+};
+
+return ChunkList;
+
+});
+
+
+
+define('brthur-view', [
+    'EventEmitter'
+], function (EventEmitter) {
+
+function BRthurView(element, options) {
+  this.element = element;
+  this.options = options;
+  this.events = new EventEmitter();
+}
+
+BRthurView.prototype.insertChunk = function (chunk, i) {
+    this.element.append(chunk.container);
+};
+
+BRthurView.prototype.removeChunk = function (chunk) {
+    chunk.container.remove();
+};
+
+return BRthurView;
+
+});
+
+
+
+define('brthur-core',[
+  'jquery',
+  'EventEmitter',
+  'brthur-chunklist',
+  'brthur-view'
+], function (
+  $, EventEmitter, ChunkList, BRthurView
+) {
+
+var defaults = {
+  multiline: true,
+};
+
+function BRthur(element, options) {
+  this.element = element = $(element);
+  this.options = $.extend(defaults, options || {});
+  this.chunkList = new ChunkList({});
+  this.view = new BRthurView(element, {});
+  this.events = new EventEmitter();
+  this.events.defineEvents(['htmlChanged']);
+  this.chunkList.events.addListener('chunkInserted', function (chunk, i) {
+    this.view.insertChunk(chunk, i);
+    this.events.emitEvent('htmlChanged', [this]);
+  }.bind(this));
+  this.chunkList.events.addListener('chunkChanged', function (chunk) {
+    this.events.emitEvent('htmlChanged', [this]);
+  }.bind(this));
+  this.chunkList.events.addListener('chunkRemoved', function (chunk) {
+    this.view.removeChunk(chunk);
+    this.events.emitEvent('htmlChanged', [this]);
+  }.bind(this));
+}
+
+BRthur.prototype.getHtml = function () {
+  return this.chunkList.getHtml();
+};
+
+BRthur.prototype.appendChunk = function (chunk) {
+  this.chunkList.appendChunk(chunk);
+};
+
+BRthur.prototype.insertChunk = function (chunk, index) {
+  this.chunkList.insertChunk(chunk, index);
+};
+
+BRthur.prototype.removeChunk = function (chunk) {
+  this.chunkList.removeChunk(chunk);
+};
+
+BRthur.prototype.chunkIndex = function (chunk) {
+  return this.chunkList.chunkIndex(chunk);
+};
+
 return BRthur;
+
+});
+
+
+
+define('brthur-chunk', [],function () {
+
+// Here's the base class for the chunks which make up a brthur document.
+
+function Chunk(options) {
+  this.options = options;
+  this.chunkList = null;
+  this.container = this.createContainer();
+}
+
+Chunk.prototype.createContainer = function () {
+  return $('<div></div>');
+};
+
+Chunk.prototype.added = function (chunkList) {
+  this.chunkList = chunkList;
+};
+
+Chunk.prototype.removed = function (chunkList) {
+  this.chunkList = null;
+}
+
+Chunk.prototype.getHtml = function () {
+  return this.container.html();
+};
+
+return Chunk;
+
+});
+
+
+
+define('element-chunk',[
+  'jquery',
+  'brthur-chunk'
+], function (
+  $, Chunk
+) {
+
+// Simple Chunk-subclass demo
+
+function ElementChunk(options) {
+  Chunk.call(this, options);
+  this.element = this.createElement();
+  this.container.append(this.element);
+}
+
+ElementChunk.prototype = Object.create(Chunk.prototype);
+ElementChunk.prototype.constructor = ElementChunk;
+
+ElementChunk.prototype.createElement = function () {
+  return document.createElement('div');
+};
+
+return ElementChunk;
+
+});
+
+
+
+define('static-chunk',[
+  'jquery',
+  'element-chunk'
+], function (
+  $, ElementChunk
+) {
+
+// Simple chunk-subclass demo
+
+function StaticChunk(options) {
+  ElementChunk.call(this, options);
+}
+
+StaticChunk.prototype = Object.create(ElementChunk.prototype);
+StaticChunk.prototype.constructor = StaticChunk;
+
+StaticChunk.prototype.createElement = function () {
+  var content = this.options.content || 'Hello, Chunk!';
+  return $('<div>' + content + '</div>');
+};
+
+return StaticChunk;
+
+});
+
+
+
+define('content-editable-chunk',[
+  'jquery',
+  'element-chunk'
+], function (
+  $, ElementChunk
+) {
+
+// Simple contentEditable chunk-subclass
+
+function ContentEditableChunk(options) {
+  ElementChunk.call(this, options);
+}
+
+ContentEditableChunk.prototype = Object.create(ElementChunk.prototype);
+ContentEditableChunk.prototype.constructor = ContentEditableChunk;
+
+ContentEditableChunk.prototype.createElement = function () {
+  var content = this.options.initialHtml || ''; 
+  var element = $('<div contenteditable="true" style="white-space: pre-wrap">' + content + '</div>');
+  return element;
+};
+
+ContentEditableChunk.prototype.added = function (chunkList) {
+  ElementChunk.prototype.added.call(this, chunkList);
+  this.observer = new MutationObserver(this.onMutated.bind(this));
+  this.observer.observe(this.element[0], {
+    characterData: true, subtree: true
+  });
+};
+
+ContentEditableChunk.prototype.onMutated = function (mutations) {
+  this.chunkList.events.trigger('chunkChanged', [this]);
+};
+
+ContentEditableChunk.prototype.getHtml = function () {
+  return this.element.html();
+};
+
+return ContentEditableChunk;
+
+});
+
+
+define('brthur',[
+  'brthur-core',
+  'brthur-chunk',
+  'element-chunk',
+  'static-chunk',
+  'content-editable-chunk'
+], function (
+  BRthur, Chunk, ElementChunk, StaticChunk, ContentEditableChunk
+) {
+
+return {
+    BRthur: BRthur,
+    Chunk: Chunk,
+    ElementChunk: ElementChunk,
+    StaticChunk: StaticChunk,
+    ContentEditableChunk: ContentEditableChunk
+};
 
 });
 

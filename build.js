@@ -7,8 +7,13 @@ require.config({
     // scribe related
     'scribe': '../../bower_components/scribe/scribe',
     // end scribe related
+    'brthur-core': './brthur-core',
     'brthur-chunk': './brthur-chunk',
-    'element-chunk': './chunks/element-chunk'
+    'brthur-chunklist': './brthur-chunklist',
+    'brthur-view': './brthur-view',
+    'element-chunk': './chunks/element-chunk',
+    'static-chunk': './chunks/static-chunk',
+    'content-editable-chunk': './chunks/content-editable-chunk'
   },
   name: '../../bower_components/almond/almond',
   wrap: {
